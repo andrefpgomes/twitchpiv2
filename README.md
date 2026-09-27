@@ -4,23 +4,33 @@ Projeto para Raspberry Pi com Pi-hole e TwitchPi. O ambiente gráfico e RealVNC 
 
 ## Instalação completa
 
-Numa Raspberry com acesso à Internet:
-
 ```bash
 curl -fsSL https://raw.githubusercontent.com/andrefpgomes/twitchpiv2/main/install-all.sh | sudo bash
 ```
 
-O instalador verifica o que já existe. Se o Pi-hole estiver instalado, não o reinstala nem substitui a configuração. O mesmo vale para Chromium. O ambiente gráfico e RealVNC não são instalados.
+O instalador deteta componentes existentes. Não instala XFCE, LightDM, Xorg ou RealVNC. Se Pi-hole ou Chromium já existirem, a configuração é preservada.
 
 ## TwitchPi
 
-A aplicação fica em `/opt/twitch-pi` e usa o serviço `twitch-pi.service`.
-
-Interface:
+Aplicação em `/opt/twitch-pi`, serviço `twitch-pi.service`, interface em:
 
 ```text
 http://IP_DA_RASPBERRY:8765
 ```
+
+## Drops
+
+O painel tem um tracker **read-only** inspirado na arquitetura de trackers de Drops: inventário/progresso é lido da sessão Twitch através da consulta GraphQL de inventário quando existe um token OAuth local válido. Não envia watch events e não faz claim automático nesta camada.
+
+Por defeito, o filtro mostra apenas:
+
+- Fortnite
+- Minecraft
+- Rocket League
+
+Outros jogos podem ser adicionados no próprio painel. A lista fica em `/opt/twitch-pi/drops_config.json`.
+
+A informação de Drops depende da sessão/autorizações da Twitch e dos campos/consultas que a Twitch disponibiliza; estes podem mudar sem aviso. A API oficial documenta que Drops acompanham atividade de visualização e que o acesso a determinados endpoints depende do contexto de desenvolvedor. citehttps://dev.twitch.tv/docs/drops
 
 ## Atualização
 
@@ -28,17 +38,18 @@ http://IP_DA_RASPBERRY:8765
 curl -fsSL https://raw.githubusercontent.com/andrefpgomes/twitchpiv2/main/update-from-github.sh | sudo bash
 ```
 
-O update cria um backup da aplicação e preserva `state.json`, configurações locais e o perfil do Chromium.
+O update cria backups e preserva `state.json`, `config.env`, `drops_config.json` existente e o perfil Chromium.
 
 ## Componentes
 
 - Pi-hole
 - Chromium
 - TwitchPi Web Controller
+- Drops tracker
 - systemd
 
-Não instala XFCE, LightDM, Xorg ou RealVNC.
+Não instala ambiente gráfico nem RealVNC.
 
 ## Segurança
 
-Não guardar passwords, tokens Twitch ou sessões do Chromium no GitHub.
+Nunca colocar passwords, OAuth tokens ou sessões do Chromium no GitHub. O token local, quando usado para o tracker, fica em `/opt/twitch-pi/config.env` com permissões restritas.
