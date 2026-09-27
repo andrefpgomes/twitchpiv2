@@ -4,7 +4,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
 BASE='/opt/twitch-pi'; PORT=int(os.environ.get('PORT','8765')); STATE_FILE=os.environ.get('STATE_FILE',BASE+'/state.json'); WEB=BASE+'/web'
 TWITCH_USER=os.environ.get('TWITCH_USER','andre'); TWITCH_UID=os.environ.get('TWITCH_UID','1000'); PROFILE=os.environ.get('TWITCH_PROFILE',f'/home/{TWITCH_USER}/.config/twitch-pi-chromium')
-CHANNEL_RE=re.compile(r'^[A-Za-z0-9_]{1,30}$'); GAME_RE=re.compile(r'^[A-Za-z0-9][A-Za-z0-9 ._\-]{0,60}$'); DROP_CACHE={'at':0,'data':None}; DEVICE={'code':None,'expires':0}
+CHANNEL_RE=re.compile(r'^[A-Za-z0-9_]{1,30}$'); GAME_RE=re.compile(r'^[A-Za-z0-9][A-Za-z0-9 ._\-]{0,60}$'); CLIENT_RE=re.compile(r'^[A-Za-z0-9]{20,60}$'); DROP_CACHE={'at':0,'data':None}; DEVICE={'code':None,'expires':0}
 
 def load_state():
     s={'channel':'','status':'stopped','last_changed':None,'favorites':[]}
@@ -108,9 +108,13 @@ class Handler(BaseHTTPRequestHandler):
         self.send_error(404)
     def do_POST(self):
         p=urlparse(self.path).path
-        if p not in ('/api/channel','/api/favorite','/api/drops/games'):respond(self,404,{'error':'not found'});return
+        if p not in ('/api/channel','/api/favorite','/api/drops/games','/api/auth/client'):respond(self,404,{'error':'not found'});return
         try:
             n=int(self.headers.get('Content-Length','0'));body=json.loads(self.rfile.read(n) or b'{}')
+            if p=='/api/auth/client':
+                cid=str(body.get('client_id','')).strip()
+                if not CLIENT_RE.fullmatch(cid):raise ValueError('Client ID Twitch inválido.')
+                oauth().write_env({'TWITCH_CLIENT_ID':cid}); respond(self,200,{'ok':True,'message':'Client ID guardado localmente. Agora podes ligar a conta Twitch.'}); return
             if p=='/api/drops/games':
                 name=str(body.get('name','')).strip()
                 if not GAME_RE.fullmatch(name):raise ValueError('Nome de jogo inválido.')
