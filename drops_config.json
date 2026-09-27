@@ -1,0 +1,7 @@
+{
+  "games": [
+    {"name": "Fortnite", "slug": "fortnite", "enabled": true},
+    {"name": "Minecraft", "slug": "minecraft", "enabled": true},
+    {"name": "Rocket League", "slug": "rocket-league", "enabled": true}
+  ]
+}
